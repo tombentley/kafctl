@@ -1,0 +1,53 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.github.tombentley.kafctl.util;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
+import org.apache.kafka.clients.admin.Admin;
+
+@ApplicationScoped
+public class AdminClient {
+
+    public interface AdminConsumer {
+        void apply(Admin admin) throws Exception;
+    }
+
+    @Inject
+    ContextDb context;
+
+    public void withAdmin(AdminConsumer consumer) {
+        Admin admin = Admin.create(context.current().properties());
+        try {
+            consumer.apply(admin);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof TimeoutException) {
+                System.err.println("Timeout");
+            } else {
+                throw new RuntimeException(e);
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+}
