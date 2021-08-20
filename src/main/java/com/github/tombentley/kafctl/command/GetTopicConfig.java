@@ -62,6 +62,7 @@ public class GetTopicConfig implements Runnable {
                             .includeDocumentation(includeDocs)
                             .includeSynonyms(includeSynonyms)).all().get();
             System.out.println(output.configs(configs));
+            return null;
         });
 
     }

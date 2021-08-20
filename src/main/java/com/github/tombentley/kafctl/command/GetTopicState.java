@@ -46,6 +46,7 @@ public class GetTopicState implements Runnable {
         adminClient.withAdmin(admin -> {
             var tds = new ArrayList<>(admin.describeTopics(this.topicNames).all().get().values());
             System.out.println(output.descriptions(tds));
+            return null;
         });
     }
 }

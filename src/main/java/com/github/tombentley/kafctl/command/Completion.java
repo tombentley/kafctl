@@ -16,34 +16,28 @@
  */
 package com.github.tombentley.kafctl.command;
 
-import javax.inject.Inject;
-import java.util.ArrayList;
-
-import com.github.tombentley.kafctl.format.ListingOutput;
-import com.github.tombentley.kafctl.util.AdminClient;
+import picocli.AutoComplete;
 import picocli.CommandLine;
-import picocli.CommandLine.Option;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Spec;
 
-@CommandLine.Command(name = "topics", description = "Lists topics.")
-public class GetTopics implements Runnable {
+@Command(
+        name = "completion",
+        description = "Generates a bash or zsh completion script. `source <(kafctl completion)"
+)
+public class Completion implements Runnable {
 
-    // TODO constrain the output formats
-    @Option(names = {"--output", "-o"},
-            defaultValue = "table",
-            converter = ListingOutput.OutputFormatConverter.class,
-            completionCandidates = ListingOutput.OutputFormatConverter.class)
-    ListingOutput output;
-
-    @Inject
-    AdminClient adminClient;
+    @Spec CommandLine.Model.CommandSpec spec;
 
     @Override
     public void run() {
-        adminClient.withAdmin(admin -> {
-            var listing = new ArrayList<>(admin.listTopics().listings().get());
-            // TODO show the internal flag too?
-            System.out.println(output.listing(listing));
-            return null;
-        });
+        String script = AutoComplete.bash(
+                spec.root().name(),
+                spec.root().commandLine());
+        // not PrintWriter.println: scripts with Windows line separators fail in strange ways!
+        spec.commandLine().getOut().print(script);
+        spec.commandLine().getOut().print('\n');
+        spec.commandLine().getOut().flush();
+
     }
 }

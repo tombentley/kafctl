@@ -26,20 +26,21 @@ import org.apache.kafka.clients.admin.Admin;
 @ApplicationScoped
 public class AdminClient {
 
-    public interface AdminConsumer {
-        void apply(Admin admin) throws Exception;
+    public interface AdminConsumer<T> {
+        T apply(Admin admin) throws Exception;
     }
 
     @Inject
     ContextDb context;
 
-    public void withAdmin(AdminConsumer consumer) {
+    public <T> T withAdmin(AdminConsumer<T> consumer) {
         Admin admin = Admin.create(context.current().properties());
         try {
-            consumer.apply(admin);
+            return consumer.apply(admin);
         } catch (ExecutionException e) {
             if (e.getCause() instanceof TimeoutException) {
                 System.err.println("Timeout");
+                return null;
             } else {
                 throw new RuntimeException(e);
             }

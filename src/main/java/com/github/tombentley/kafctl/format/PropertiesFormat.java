@@ -16,8 +16,11 @@
  */
 package com.github.tombentley.kafctl.format;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -45,13 +48,24 @@ public class PropertiesFormat implements ConfigOutput {
             return config;
         }
 
-        public void writeProperties(PrintStream ps) throws IOException {
-            // TODO shame this results in random order. We could buffer the lines and sort them
+        public String sortedProperties() {
             Properties p = new Properties();
+            StringWriter sw = new StringWriter();
             for (var ce: config().entries()) {
-                p.put(ce.name(), ce.value());
+                String value = ce.value();
+                if (value != null) {
+                    p.put(ce.name(), value);
+                }
             }
-            p.store(ps, name());
+            try {
+                p.store(sw, null);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            return new BufferedReader(new StringReader(sw.toString())).lines()
+                    .filter(line -> !line.startsWith("#"))
+                    .sorted()
+                    .collect(Collectors.joining(System.lineSeparator()));
         }
     }
 
@@ -64,14 +78,6 @@ public class PropertiesFormat implements ConfigOutput {
                 .map(e -> new FlatConfig(e.getKey().name(), e.getValue()))
                 .sorted(Comparator.comparing(FlatConfig::name))
                 .collect(Collectors.toList());
-
-        try {
-            // TODO Eugh, this is an ugly hack
-            collect.get(0).writeProperties(System.out);
-            return "";
-        } catch (IOException e) {
-            throw new OutputException(e);
-        }
-
+        return collect.get(0).sortedProperties();
     }
 }

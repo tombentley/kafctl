@@ -23,7 +23,8 @@ import picocli.CommandLine;
         subcommands = {
                 CommandLine.HelpCommand.class,
                 Context.class,
-                Get.class
+                Get.class,
+                Completion.class
         },
         description = "A command-line interface for Kafka"
 
