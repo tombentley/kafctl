@@ -17,22 +17,20 @@
 package com.github.tombentley.kafctl.command;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 
-import com.github.tombentley.kafctl.format.ListTopicsOutput;
+import com.github.tombentley.kafctl.format.DescribeClusterOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
-import org.apache.kafka.clients.admin.ListTopicsOptions;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
-@CommandLine.Command(name = "topics", description = "Lists topics.")
-public class GetTopics implements Runnable {
+@CommandLine.Command(name = "brokers", description = "Lists brokers.")
+public class GetBrokers implements Runnable {
 
     @Option(names = {"--output", "-o"},
-            defaultValue = "table",
-            converter = ListTopicsOutput.OutputFormatConverter.class,
-            completionCandidates = ListTopicsOutput.OutputFormatConverter.class)
-    ListTopicsOutput output;
+            defaultValue = "json",
+            converter = DescribeClusterOutput.OutputFormatConverter.class,
+            completionCandidates = DescribeClusterOutput.OutputFormatConverter.class)
+    DescribeClusterOutput output;
 
     @Inject
     AdminClient adminClient;
@@ -40,9 +38,7 @@ public class GetTopics implements Runnable {
     @Override
     public void run() {
         adminClient.withAdmin(admin -> {
-            var listing = new ArrayList<>(admin.listTopics(new ListTopicsOptions().listInternal(true)).listings().get());
-            // TODO show the internal flag too?
-            System.out.println(output.listTopics(listing));
+            System.out.println(output.describeBrokers(admin.describeCluster().nodes().get()));
             return null;
         });
     }

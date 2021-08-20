@@ -24,6 +24,7 @@ import picocli.CommandLine.Command;
         subcommands = {
                 GetTopics.class,
                 GetTopic.class,
+                GetBrokers.class,
                 GetBroker.class
         }
 )

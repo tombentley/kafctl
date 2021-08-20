@@ -20,15 +20,15 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.clients.admin.TopicListing;
 import picocli.CommandLine;
 
-public interface DescriptionOutput {
-    String descriptions(Collection<TopicDescription> tds);
+public interface ListTopicsOutput {
+    String listTopics(Collection<TopicListing> listing);
 
-    class OutputFormatConverter implements CommandLine.ITypeConverter<DescriptionOutput>, Iterable<String> {
+    class OutputFormatConverter implements CommandLine.ITypeConverter<ListTopicsOutput>, Iterable<String> {
         @Override
-        public DescriptionOutput convert(String value) {
+        public ListTopicsOutput convert(String value) {
             switch (value) {
                 case "json":
                     return new JsonFormat();
@@ -44,7 +44,7 @@ public interface DescriptionOutput {
 
         @Override
         public Iterator<String> iterator() {
-            return List.of("json", "yaml").iterator();
+            return List.of("json", "yaml", "table").iterator();
         }
     }
 }

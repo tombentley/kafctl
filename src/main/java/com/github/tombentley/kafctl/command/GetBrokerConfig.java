@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.github.tombentley.kafctl.format.ConfigOutput;
+import com.github.tombentley.kafctl.format.DescribeConfigsOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.DescribeConfigsOptions;
@@ -35,9 +35,9 @@ import static picocli.CommandLine.Parameters;
 public class GetBrokerConfig implements Runnable {
     @Option(names = {"--output", "-o"},
             defaultValue = "properties",
-            converter = ConfigOutput.OutputFormatConverter.class,
-            completionCandidates = ConfigOutput.OutputFormatConverter.class)
-    ConfigOutput output;
+            converter = DescribeConfigsOutput.OutputFormatConverter.class,
+            completionCandidates = DescribeConfigsOutput.OutputFormatConverter.class)
+    DescribeConfigsOutput output;
 
     @Option(names = "--docs", defaultValue = "false")
     boolean includeDocs;
@@ -61,7 +61,7 @@ public class GetBrokerConfig implements Runnable {
                     new DescribeConfigsOptions()
                             .includeDocumentation(includeDocs)
                             .includeSynonyms(includeSynonyms)).all().get();
-            System.out.println(output.configs(configs));
+            System.out.println(output.describeConfigs(configs));
             return null;
         });
 

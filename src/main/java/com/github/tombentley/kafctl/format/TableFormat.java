@@ -21,15 +21,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.freva.asciitable.AsciiTable;
 import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
+import org.apache.kafka.common.Node;
+import org.apache.kafka.common.TopicPartitionInfo;
 
-public class TableFormat implements ListingOutput, DescriptionOutput {
+public class TableFormat implements ListTopicsOutput, DescribeTopicsOutput {
     @Override
-    public String descriptions(Collection<TopicDescription> tds) {
+    public String describeTopics(Collection<TopicDescription> tds) {
         var topics = tds.stream()
                 .flatMap(t -> t.partitions().stream().map(p -> new Partition(t, p)))
                 .sorted(Comparator.comparing(Partition::topicName))
@@ -48,7 +51,54 @@ public class TableFormat implements ListingOutput, DescriptionOutput {
     }
 
     @Override
-    public String listing(Collection<TopicListing> listing) {
+    public String listTopics(Collection<TopicListing> listing) {
         return listing.stream().map(TopicListing::name).collect(Collectors.joining(System.lineSeparator()));
+    }
+
+    public static class Partition {
+
+        private final String topicName;
+        private final TopicDescription td;
+        private final TopicPartitionInfo p;
+
+        public Partition(TopicDescription td, TopicPartitionInfo p) {
+            this.topicName = td.name();
+            this.td = td;
+            this.p = p;
+        }
+
+        @JsonProperty
+        public String topicName() {
+            return topicName;
+        }
+
+        @JsonProperty
+        public String topicId() {
+            return td.topicId().toString();
+        }
+
+        @JsonProperty
+        public String partitionId() {
+            return Integer.toString(p.partition());
+        }
+
+        @JsonProperty
+        public String leader() {
+            return p.leader().idString();
+        }
+
+        @JsonProperty
+        public String replicas() {
+            return p.replicas().stream()
+                    .map(Node::idString)
+                    .collect(Collectors.joining(","));
+        }
+
+        @JsonProperty
+        public String isr() {
+            return p.isr().stream()
+                    .map(Node::idString)
+                    .collect(Collectors.joining(","));
+        }
     }
 }

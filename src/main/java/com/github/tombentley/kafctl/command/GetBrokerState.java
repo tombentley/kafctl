@@ -17,22 +17,26 @@
 package com.github.tombentley.kafctl.command;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import com.github.tombentley.kafctl.format.ListTopicsOutput;
+import com.github.tombentley.kafctl.format.DescribeClusterOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
-import org.apache.kafka.clients.admin.ListTopicsOptions;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
-@CommandLine.Command(name = "topics", description = "Lists topics.")
-public class GetTopics implements Runnable {
+@Command(name = "state", description = "Gets the named broker's state.")
+public class GetBrokerState implements Runnable {
 
     @Option(names = {"--output", "-o"},
-            defaultValue = "table",
-            converter = ListTopicsOutput.OutputFormatConverter.class,
-            completionCandidates = ListTopicsOutput.OutputFormatConverter.class)
-    ListTopicsOutput output;
+            defaultValue = "json",
+            converter = DescribeClusterOutput.OutputFormatConverter.class,
+            completionCandidates = DescribeClusterOutput.OutputFormatConverter.class)
+    DescribeClusterOutput output;
+
+    @Parameters(index = "0..*", arity = "1..")
+    List<Integer> brokerIds;
 
     @Inject
     AdminClient adminClient;
@@ -40,9 +44,10 @@ public class GetTopics implements Runnable {
     @Override
     public void run() {
         adminClient.withAdmin(admin -> {
-            var listing = new ArrayList<>(admin.listTopics(new ListTopicsOptions().listInternal(true)).listings().get());
-            // TODO show the internal flag too?
-            System.out.println(output.listTopics(listing));
+            // TODO output should be in the same order as brokerId
+            System.out.println(output.describeBrokers(admin.describeCluster().nodes().get().stream()
+                    .filter(node -> brokerIds.contains(node.id()))
+                    .collect(Collectors.toList())));
             return null;
         });
     }

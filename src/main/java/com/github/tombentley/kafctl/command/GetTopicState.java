@@ -20,7 +20,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.tombentley.kafctl.format.DescriptionOutput;
+import com.github.tombentley.kafctl.format.DescribeTopicsOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -31,9 +31,9 @@ public class GetTopicState implements Runnable {
 
     @Option(names = {"--output", "-o"},
             defaultValue = "table",
-            converter = DescriptionOutput.OutputFormatConverter.class,
-            completionCandidates = DescriptionOutput.OutputFormatConverter.class)
-    DescriptionOutput output;
+            converter = DescribeTopicsOutput.OutputFormatConverter.class,
+            completionCandidates = DescribeTopicsOutput.OutputFormatConverter.class)
+    DescribeTopicsOutput output;
 
     @Parameters(index = "0..*", arity = "1..")
     List<String> topicNames;
@@ -45,7 +45,7 @@ public class GetTopicState implements Runnable {
     public void run() {
         adminClient.withAdmin(admin -> {
             var tds = new ArrayList<>(admin.describeTopics(this.topicNames).all().get().values());
-            System.out.println(output.descriptions(tds));
+            System.out.println(output.describeTopics(tds));
             return null;
         });
     }

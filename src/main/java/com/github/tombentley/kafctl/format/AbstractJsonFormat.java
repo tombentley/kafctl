@@ -23,20 +23,67 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
+import org.apache.kafka.common.Node;
+import org.apache.kafka.common.TopicPartitionInfo;
+import org.apache.kafka.common.acl.AclOperation;
 import org.apache.kafka.common.config.ConfigResource;
 
-public abstract class AbstractJsonFormat implements ListingOutput, DescriptionOutput, ConfigOutput {
+public abstract class AbstractJsonFormat implements ListTopicsOutput, DescribeTopicsOutput, DescribeClusterOutput, DescribeConfigsOutput {
 
     protected abstract ObjectMapper mapper();
 
+    @JsonPropertyOrder({"brokerId", "rackId", "host", "port"})
+    static class Broker {
+        private final Node node;
+
+        public Broker(Node node) {
+            this.node = node;
+        }
+
+        @JsonProperty
+        public int brokerId() {
+            return this.node.id();
+        }
+
+        @JsonProperty
+        public String rackId() {
+            return this.node.rack();
+        }
+
+        @JsonProperty
+        public int port() {
+            return this.node.port();
+        }
+
+        @JsonProperty
+        public String host() {
+            return this.node.host();
+        }
+    }
+
     @Override
-    public String descriptions(Collection<TopicDescription> tds) {
+    public String describeCluster(String clusterId, Node controller, Collection<Node> liveBrokers, List<AclOperation> authorizedOperations) {
+        throw new RuntimeException("Impl");
+    }
+
+    @Override
+    public String describeBrokers(Collection<Node> liveBrokers) {
+        try {
+            return mapper().writeValueAsString(liveBrokers.stream().map(Broker::new).collect(Collectors.toList()));
+        } catch (JsonProcessingException e) {
+            throw new OutputException(e);
+        }
+    }
+
+    @Override
+    public String describeTopics(Collection<TopicDescription> tds) {
 
         List<Td> list = tds.stream().map(Td::new).collect(Collectors.toList());
 
@@ -48,7 +95,7 @@ public abstract class AbstractJsonFormat implements ListingOutput, DescriptionOu
     }
 
     @Override
-    public String listing(Collection<TopicListing> listing) {
+    public String listTopics(Collection<TopicListing> listing) {
         try {
             return mapper().writeValueAsString(listing.stream().map(TopicListing::name).collect(Collectors.toList()));
         } catch (JsonProcessingException e) {
@@ -171,11 +218,70 @@ public abstract class AbstractJsonFormat implements ListingOutput, DescriptionOu
     }
 
     @Override
-    public String configs(Map<ConfigResource, Config> configs) {
+    public String describeConfigs(Map<ConfigResource, Config> configs) {
         try {
             return mapper().writeValueAsString(configs.entrySet().stream().map(e -> new Cfg(e.getKey(), e.getValue())).collect(Collectors.toList()));
         } catch (JsonProcessingException e) {
             throw new OutputException(e);
+        }
+    }
+
+    /**
+     * Json wrapper for TopicDescription
+     */
+    @JsonPropertyOrder({"topicName", "topicId", "partitions"})
+    public static class Td {
+        private final TopicDescription td;
+
+        public Td(TopicDescription td) {
+            this.td = td;
+        }
+
+        @JsonProperty
+        public String topicName() {
+            return td.name();
+        }
+
+        @JsonProperty
+        public String topicId() {
+            return td.topicId().toString();
+        }
+
+        @JsonProperty
+        public List<Pd> partitions() {
+            return td.partitions().stream().map(Pd::new).collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * Json wrapper for TopicPartitionInfo
+     */
+    @JsonPropertyOrder({"partitionId", "leader", "replicas", "isr"})
+    public static class Pd {
+        private final TopicPartitionInfo pd;
+
+        public Pd(TopicPartitionInfo pd) {
+            this.pd = pd;
+        }
+
+        @JsonProperty
+        public int partitionId() {
+            return pd.partition();
+        }
+
+        @JsonProperty
+        public int leader() {
+            return pd.leader().id();
+        }
+
+        @JsonProperty
+        public int[] replicas() {
+            return pd.replicas().stream().mapToInt(Node::id).toArray();
+        }
+
+        @JsonProperty
+        public int[] isr() {
+            return pd.isr().stream().mapToInt(Node::id).toArray();
         }
     }
 }

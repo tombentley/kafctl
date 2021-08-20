@@ -20,7 +20,8 @@ import picocli.CommandLine;
 
 @CommandLine.Command(name = "broker", description = "Gets the named broker's state or config.",
         subcommands = {
-                GetBrokerConfig.class
+                GetBrokerConfig.class,
+                GetBrokerState.class
         }
 )
 public class GetBroker {

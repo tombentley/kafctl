@@ -16,26 +16,27 @@
  */
 package com.github.tombentley.kafctl.format;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.kafka.clients.admin.TopicListing;
+import org.apache.kafka.clients.admin.Config;
+import org.apache.kafka.common.config.ConfigResource;
 import picocli.CommandLine;
 
-public interface ListingOutput {
-    String listing(Collection<TopicListing> listing);
+public interface DescribeConfigsOutput {
+    String describeConfigs(Map<ConfigResource, Config> configs);
 
-    class OutputFormatConverter implements CommandLine.ITypeConverter<ListingOutput>, Iterable<String> {
+    class OutputFormatConverter implements CommandLine.ITypeConverter<DescribeConfigsOutput>, Iterable<String> {
         @Override
-        public ListingOutput convert(String value) {
+        public DescribeConfigsOutput convert(String value) {
             switch (value) {
                 case "json":
                     return new JsonFormat();
                 case "yaml":
                     return new YamlFormat();
-                case "table":
-                    return new TableFormat();
+                case "properties":
+                    return new PropertiesFormat();
                 default:
                     throw new IllegalArgumentException("Unknown output format: " + value);
             }
@@ -44,7 +45,7 @@ public interface ListingOutput {
 
         @Override
         public Iterator<String> iterator() {
-            return List.of("json", "yaml", "table").iterator();
+            return List.of("properties", "json", "yaml").iterator();
         }
     }
 }
