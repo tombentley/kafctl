@@ -17,70 +17,40 @@
 package com.github.tombentley.kafctl.command;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import com.github.tombentley.kafctl.format.CGroupsOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
-import org.apache.kafka.clients.admin.ConsumerGroupDescription;
-import org.apache.kafka.clients.admin.ConsumerGroupListing;
-import org.apache.kafka.clients.admin.DescribeConsumerGroupsOptions;
-import org.apache.kafka.clients.admin.ListConsumerGroupsOptions;
 import picocli.CommandLine;
+import picocli.CommandLine.Command;
 
-@CommandLine.Command(
+@Command(
         name = "consumer-group",
-        aliases = "consumer-group",
-        description = "Gets the named consumer-group"
+        aliases = {"consumer-groups", "cg"},
+        description = "When executed without a subcommand, lists the consumer group ids. " +
+                "When the `state` subcommand is given, gets the state of the listed consumer groups.",
+        subcommands = {
+                GetConsumerGroupState.class
+                // TODO `get consumer-group lag` command
+        }
 )
 public class GetConsumerGroup implements Runnable {
 
-        @CommandLine.Option(
-                names = {"--output", "-o"},
-                description = "The output format. Valid values: ${COMPLETION-CANDIDATES}",
-                defaultValue = "json",
-                converter = CGroupsOutput.OutputFormatConverter.class,
-                completionCandidates = CGroupsOutput.OutputFormatConverter.class)
-        CGroupsOutput output;
+    @CommandLine.Option(
+            names = {"--output", "-o"},
+            description = "The output format. Valid values: ${COMPLETION-CANDIDATES}",
+            defaultValue = "json",
+            converter = CGroupsOutput.OutputFormatConverter.class,
+            completionCandidates = CGroupsOutput.OutputFormatConverter.class)
+    CGroupsOutput output;
 
-//        static class OutputFormatConverter extends AbstractEnumeratedOption<ConsumerGroupState> {
-//                @Override
-//                protected Map<String, Supplier<ConsumerGroupState>> map() {
-//                        // TODO this is a mess
-//                        return Map.of("dead", () ->ConsumerGroupState.DEAD);
-//                }
-//        }
-//
-//        @CommandLine.Option(names = {"--in-states"},
-//                converter = CGroupsOutput.OutputFormatConverter.class,
-//                completionCandidates = CGroupsOutput.OutputFormatConverter.class)
-//        Set<ConsumerGroupState> states;
+    @Inject
+    AdminClient adminClient;
 
-        @CommandLine.Parameters(index = "0..*", arity = "0..")
-        List<String> groupNames;
-
-        @Inject
-        AdminClient adminClient;
-
-        @Override
-        public void run() {
-                // TODO table out with internal column
-                // TODO sort by internal first, then name?
-
-                adminClient.withAdmin(admin -> {
-                        if (groupNames == null || groupNames.isEmpty()) {
-                                ArrayList<ConsumerGroupListing> listing = new ArrayList<>(admin.listConsumerGroups(new ListConsumerGroupsOptions()).all().get());
-                                listing.sort(Comparator.comparing(ConsumerGroupListing::groupId));
-                                System.out.println(output.listCGroups(listing));
-                        } else {
-                                Map<String, ConsumerGroupDescription> listing = new TreeMap<>(admin.describeConsumerGroups(groupNames, new DescribeConsumerGroupsOptions()).all().get());
-                                System.out.println(output.describeCGroups(listing));
-                        }
-                        return null;
-                });
-        }
-
+    @Override
+    public void run() {
+        adminClient.withAdmin(admin -> {
+            System.out.println(output.listCGroups(admin.listConsumerGroups().all().get()));
+            return null;
+       });
+    }
 }

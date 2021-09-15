@@ -25,6 +25,7 @@ import picocli.CommandLine;
                 Get.class,
                 Create.class,
                 Alter.class,
+                Edit.class,
                 Delete.class,
                 CommandLine.HelpCommand.class,
                 Completion.class

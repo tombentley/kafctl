@@ -16,19 +16,16 @@
  */
 package com.github.tombentley.kafctl.command;
 
-import picocli.CommandLine.Command;
+import picocli.CommandLine;
 
-@Command(
-        name = "get",
-        description = "Get configs and status of brokers, topics etc.",
+@CommandLine.Command(
+        name = "topic",
+        description = "Edit topic configs",
         subcommands = {
-                GetTopic.class,
-                GetBroker.class,
-                GetConsumerGroup.class,
-                GetConsumerGroupState.class,
-                GetContexts.class
+                EditTopicConfig.class
         }
 )
-public class Get {
+public class EditTopic {
+
 
 }
