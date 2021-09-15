@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.kafka.clients.admin.Admin;
+import org.apache.kafka.common.KafkaException;
 
 @ApplicationScoped
 public class AdminClient {
@@ -38,9 +39,11 @@ public class AdminClient {
         try {
             return consumer.apply(admin);
         } catch (ExecutionException e) {
+            // TODO picocli is there a way to print a coloured error to stdout without a stacktrace?
             if (e.getCause() instanceof TimeoutException) {
-                System.err.println("Timeout");
-                return null;
+                throw new RuntimeException("Timeout wait for server response");
+            } else if (e.getCause() instanceof KafkaException) {
+                throw new RuntimeException(e.getCause().getMessage());
             } else {
                 throw new RuntimeException(e);
             }

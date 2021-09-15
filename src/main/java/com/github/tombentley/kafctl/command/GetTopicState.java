@@ -20,7 +20,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.tombentley.kafctl.format.DescribeTopicsOutput;
+import com.github.tombentley.kafctl.format.TopicsOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -30,10 +30,11 @@ import picocli.CommandLine.Parameters;
 public class GetTopicState implements Runnable {
 
     @Option(names = {"--output", "-o"},
+            description = "The output format. Valid values: ${COMPLETION-CANDIDATES}",
             defaultValue = "table",
-            converter = DescribeTopicsOutput.OutputFormatConverter.class,
-            completionCandidates = DescribeTopicsOutput.OutputFormatConverter.class)
-    DescribeTopicsOutput output;
+            converter = TopicsOutput.OutputFormatConverter.class,
+            completionCandidates = TopicsOutput.OutputFormatConverter.class)
+    TopicsOutput output;
 
     @Parameters(index = "0..*", arity = "1..")
     List<String> topicNames;

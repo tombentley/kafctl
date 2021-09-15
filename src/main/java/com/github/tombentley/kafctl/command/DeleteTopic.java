@@ -16,30 +16,33 @@
  */
 package com.github.tombentley.kafctl.command;
 
-import picocli.AutoComplete;
+import javax.inject.Inject;
+import java.util.List;
+
+import com.github.tombentley.kafctl.util.AdminClient;
 import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Spec;
 
-@Command(
-        name = "completion",
-        description = "Generates a bash or zsh completion script. `source <(kafctl completion)"
-)
-public class Completion implements Runnable {
+@CommandLine.Command(
+        name = "topic",
+        aliases = "topics",
+        description = "Deletes named topics.")
+public class DeleteTopic implements Runnable {
 
-    // TODO figure out the hack needed for topic name complation
+    @CommandLine.Parameters(index = "0..*", arity = "1..")
+    List<String> topicNames;
 
-    @Spec CommandLine.Model.CommandSpec spec;
+    // TODO Kafka itself doesn't support a dry-run
+//    @CommandLine.Option(names = {"--dry-run"})
+//    boolean dryRun;
+
+    @Inject
+    AdminClient adminClient;
 
     @Override
     public void run() {
-        String script = AutoComplete.bash(
-                spec.root().name(),
-                spec.root().commandLine());
-        // not PrintWriter.println: scripts with Windows line separators fail in strange ways!
-        spec.commandLine().getOut().print(script);
-        spec.commandLine().getOut().print('\n');
-        spec.commandLine().getOut().flush();
-
+        adminClient.withAdmin(ac -> {
+            ac.deleteTopics(topicNames).all().get();
+            return null;
+        });
     }
 }

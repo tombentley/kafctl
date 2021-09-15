@@ -16,30 +16,25 @@
  */
 package com.github.tombentley.kafctl.command;
 
-import picocli.AutoComplete;
+import javax.inject.Inject;
+import java.io.File;
+
+import com.github.tombentley.kafctl.util.ContextDb;
 import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Spec;
 
-@Command(
-        name = "completion",
-        description = "Generates a bash or zsh completion script. `source <(kafctl completion)"
-)
-public class Completion implements Runnable {
+@CommandLine.Command(name = "context", description = "Update an existing context.")
+class AlterContext implements Runnable {
+    @CommandLine.Parameters(index = "0", description = "The name of the context to update.")
+    String contextName;
 
-    // TODO figure out the hack needed for topic name complation
+    @CommandLine.Option(names = {"-f", "--file"}, description = "The admin client properties to use.", required = true)
+    File file;
 
-    @Spec CommandLine.Model.CommandSpec spec;
+    @Inject
+    ContextDb context;
 
     @Override
     public void run() {
-        String script = AutoComplete.bash(
-                spec.root().name(),
-                spec.root().commandLine());
-        // not PrintWriter.println: scripts with Windows line separators fail in strange ways!
-        spec.commandLine().getOut().print(script);
-        spec.commandLine().getOut().print('\n');
-        spec.commandLine().getOut().flush();
-
+        context.update(contextName, file);
     }
 }

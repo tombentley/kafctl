@@ -21,13 +21,15 @@ import picocli.CommandLine;
 @TopCommand
 @CommandLine.Command(name = "kafctl",
         subcommands = {
-                CommandLine.HelpCommand.class,
-                Context.class,
+                Explain.class,
                 Get.class,
+                Create.class,
+                Alter.class,
+                Delete.class,
+                CommandLine.HelpCommand.class,
                 Completion.class
         },
-        description = "A command-line interface for Kafka"
-
+        description = "A command-line interface for Kafka administration"
 )
 public class KcCtlCommand {
 }

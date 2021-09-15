@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.common.config.ConfigResource;
 
-public class PropertiesFormat implements DescribeConfigsOutput {
+public class PropertiesFormat implements GetConfigsOutput {
     static class FlatConfig {
         String name;
         Config config;
@@ -70,7 +70,7 @@ public class PropertiesFormat implements DescribeConfigsOutput {
     }
 
     @Override
-    public String describeConfigs(Map<ConfigResource, Config> configs) {
+    public String getConfigs(Map<ConfigResource, Config> configs) {
         if (configs.size() > 1) {
             throw new RuntimeException("Can't use properties output with multiple configs");
         }
@@ -80,4 +80,5 @@ public class PropertiesFormat implements DescribeConfigsOutput {
                 .collect(Collectors.toList());
         return collect.get(0).sortedProperties();
     }
+
 }

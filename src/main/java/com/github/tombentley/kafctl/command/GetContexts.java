@@ -16,30 +16,27 @@
  */
 package com.github.tombentley.kafctl.command;
 
-import picocli.AutoComplete;
+import javax.inject.Inject;
+
+import com.github.freva.asciitable.AsciiTable;
+import com.github.freva.asciitable.Column;
+import com.github.tombentley.kafctl.util.ContextDb;
 import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Spec;
 
-@Command(
-        name = "completion",
-        description = "Generates a bash or zsh completion script. `source <(kafctl completion)"
-)
-public class Completion implements Runnable {
+@CommandLine.Command(name = "contexts", description = "List the available contexts")
+class GetContexts implements Runnable {
 
-    // TODO figure out the hack needed for topic name complation
-
-    @Spec CommandLine.Model.CommandSpec spec;
+    @Inject
+    ContextDb context;
 
     @Override
     public void run() {
-        String script = AutoComplete.bash(
-                spec.root().name(),
-                spec.root().commandLine());
-        // not PrintWriter.println: scripts with Windows line separators fail in strange ways!
-        spec.commandLine().getOut().print(script);
-        spec.commandLine().getOut().print('\n');
-        spec.commandLine().getOut().flush();
-
+        System.out.println(AsciiTable.getTable(
+                AsciiTable.NO_BORDERS,
+                context.list(),
+                java.util.List.of(
+                        new Column().header("NAME").with(ContextDb.Context::name),
+                        new Column().header("BOOTSTRAP").with(ContextDb.Context::bootstrapServers)
+                )));
     }
 }

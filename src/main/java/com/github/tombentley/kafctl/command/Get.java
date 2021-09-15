@@ -22,10 +22,10 @@ import picocli.CommandLine.Command;
         name = "get",
         description = "Get configs and status of brokers, topics etc.",
         subcommands = {
-                GetTopics.class,
                 GetTopic.class,
-                GetBrokers.class,
-                GetBroker.class
+                GetBroker.class,
+                GetConsumerGroup.class,
+                GetContexts.class
         }
 )
 public class Get {

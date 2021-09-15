@@ -16,8 +16,11 @@
  */
 package com.github.tombentley.kafctl.format;
 
+import java.util.Collection;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
 
 public class JsonFormat extends AbstractJsonFormat {
 

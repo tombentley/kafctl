@@ -17,34 +17,26 @@
 package com.github.tombentley.kafctl.format;
 
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
 
 import org.apache.kafka.clients.admin.TopicDescription;
-import picocli.CommandLine;
+import org.apache.kafka.clients.admin.TopicListing;
 
-public interface DescribeTopicsOutput {
+public interface TopicsOutput {
+
     String describeTopics(Collection<TopicDescription> tds);
 
-    class OutputFormatConverter implements CommandLine.ITypeConverter<DescribeTopicsOutput>, Iterable<String> {
-        @Override
-        public DescribeTopicsOutput convert(String value) {
-            switch (value) {
-                case "json":
-                    return new JsonFormat();
-                case "yaml":
-                    return new YamlFormat();
-                case "table":
-                    return new TableFormat();
-                default:
-                    throw new IllegalArgumentException("Unknown output format: " + value);
-            }
+    String listTopics(Collection<TopicListing> listing);
 
-        }
-
+    class OutputFormatConverter extends AbstractEnumeratedOption<TopicsOutput> {
         @Override
-        public Iterator<String> iterator() {
-            return List.of("table", "json", "yaml").iterator();
+        protected Map<String, TopicsOutput> map() {
+            return Map.of(
+                    "json", new JsonFormat(),
+                    "yaml", new YamlFormat(),
+                    "csv", new CsvFormat(),
+                    "table", new TableFormat()
+            );
         }
     }
 }

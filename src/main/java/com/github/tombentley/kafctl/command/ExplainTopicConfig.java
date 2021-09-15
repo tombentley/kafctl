@@ -17,37 +17,29 @@
 package com.github.tombentley.kafctl.command;
 
 import javax.inject.Inject;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 
-import com.github.tombentley.kafctl.format.GetConfigsOutput;
+import com.github.tombentley.kafctl.format.DescribeConfigsOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.DescribeConfigsOptions;
+import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.common.config.ConfigResource;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-import static picocli.CommandLine.Parameters;
-
-@Command(name = "config", description = "Gets the named broker configs.")
-public class GetBrokerConfig implements Runnable {
+@Command(name = "config", description = "Describes topic configs.")
+public class ExplainTopicConfig implements Runnable {
     @Option(names = {"--output", "-o"},
             description = "The output format. Valid values: ${COMPLETION-CANDIDATES}",
-            defaultValue = "properties",
-            converter = GetConfigsOutput.OutputFormatConverter.class,
-            completionCandidates = GetConfigsOutput.OutputFormatConverter.class)
-    GetConfigsOutput output;
+            defaultValue = "plain",
+            converter = DescribeConfigsOutput.OutputFormatConverter.class,
+            completionCandidates = DescribeConfigsOutput.OutputFormatConverter.class)
+    DescribeConfigsOutput output;
 
-    @Option(names = "--docs", defaultValue = "false")
-    boolean includeDocs;
-
-    @Option(names = "--synonyms", defaultValue = "false")
-    boolean includeSynonyms;
-
-    @Parameters(index = "0..*", arity = "1..")
-    List<Integer> brokerIds;
+    // TODO config name arguments to specify an || filter
 
     @Inject
     AdminClient adminClient;
@@ -55,14 +47,18 @@ public class GetBrokerConfig implements Runnable {
     @Override
     public void run() {
         adminClient.withAdmin(admin -> {
-            Map<ConfigResource, Config> configs = admin.describeConfigs(
-                    brokerIds.stream()
-                            .map(name -> new ConfigResource(ConfigResource.Type.BROKER, Integer.toString(name)))
-                            .collect(Collectors.toList()),
+            // TODO This is a horrible hack around the fact that Kafka only exposes config descriptions by describing existing entities
+            // I.e. you need a topic to be able to query a broker for topic configs.
+            Set<String> topicNames = admin.listTopics(new ListTopicsOptions().listInternal(true)).names().get();
+            ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topicNames.iterator().next());
+            Config config = admin.describeConfigs(
+                    List.of(configResource),
                     new DescribeConfigsOptions()
-                            .includeDocumentation(includeDocs)
-                            .includeSynonyms(includeSynonyms)).all().get();
-            System.out.println(output.getConfigs(configs));
+                            .includeDocumentation(true)
+                            .includeSynonyms(true)).values().get(configResource).get();
+            System.out.println(output.describeConfigs(config.entries()));
+
+
             return null;
         });
 

@@ -16,21 +16,20 @@
  */
 package com.github.tombentley.kafctl.format;
 
-import java.util.Collection;
 import java.util.Map;
 
-import org.apache.kafka.clients.admin.ConfigEntry;
+import org.apache.kafka.clients.admin.Config;
+import org.apache.kafka.common.config.ConfigResource;
 
-import static picocli.CommandLine.Help.Ansi;
+public interface GetConfigsOutput {
+    String getConfigs(Map<ConfigResource, Config> configs);
 
-public interface DescribeConfigsOutput {
-    String describeConfigs(Collection<ConfigEntry> configs);
-
-    class OutputFormatConverter extends AbstractEnumeratedOption<DescribeConfigsOutput> {
+    class OutputFormatConverter extends AbstractEnumeratedOption<GetConfigsOutput> {
         @Override
-        protected Map<String, DescribeConfigsOutput> map() {
-            return Map.of("plain", new PlainTextFormat(),
-                    "json", new JsonFormat());
+        protected Map<String, GetConfigsOutput> map() {
+            return Map.of("json", new JsonFormat(),
+                    "yaml", new YamlFormat(),
+                    "properties", new PropertiesFormat());
         }
     }
 }

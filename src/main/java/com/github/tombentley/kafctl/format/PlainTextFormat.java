@@ -17,20 +17,22 @@
 package com.github.tombentley.kafctl.format;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.admin.ConfigEntry;
+import picocli.CommandLine.Help.Ansi;
 
-import static picocli.CommandLine.Help.Ansi;
+public class PlainTextFormat implements DescribeConfigsOutput {
 
-public interface DescribeConfigsOutput {
-    String describeConfigs(Collection<ConfigEntry> configs);
-
-    class OutputFormatConverter extends AbstractEnumeratedOption<DescribeConfigsOutput> {
-        @Override
-        protected Map<String, DescribeConfigsOutput> map() {
-            return Map.of("plain", new PlainTextFormat(),
-                    "json", new JsonFormat());
-        }
+    @Override
+    public String describeConfigs(Collection<ConfigEntry> configs) {
+        return configs.stream().sorted(Comparator.comparing(ConfigEntry::name))
+                .map(entry -> {
+                    return Ansi.AUTO.string("@|green " + entry.name() + "|@")
+                        + " (" + Ansi.AUTO.string("@|blue " + (entry.isReadOnly() ? "read-only " : "read-write ") + entry.type() + "|@") + "): "
+                        + Ansi.AUTO.string(entry.documentation().replaceAll("\\<code\\>(.*?)</code>", "@|bold $1|@"));
+                })
+                .collect(Collectors.joining(System.lineSeparator()));
     }
 }

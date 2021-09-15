@@ -31,8 +31,8 @@ import picocli.CommandLine.Option;
 
 import static picocli.CommandLine.Parameters;
 
-@Command(name = "config", description = "Gets the named broker configs.")
-public class GetBrokerConfig implements Runnable {
+@Command(name = "loggers", description = "Gets the named broker configs.")
+public class GetBrokerLoggers implements Runnable {
     @Option(names = {"--output", "-o"},
             description = "The output format. Valid values: ${COMPLETION-CANDIDATES}",
             defaultValue = "properties",
@@ -54,10 +54,11 @@ public class GetBrokerConfig implements Runnable {
 
     @Override
     public void run() {
+        // TODO this is almost identical to the logger configs code: Encapsulate!
         adminClient.withAdmin(admin -> {
             Map<ConfigResource, Config> configs = admin.describeConfigs(
                     brokerIds.stream()
-                            .map(name -> new ConfigResource(ConfigResource.Type.BROKER, Integer.toString(name)))
+                            .map(name -> new ConfigResource(ConfigResource.Type.BROKER_LOGGER, Integer.toString(name)))
                             .collect(Collectors.toList()),
                     new DescribeConfigsOptions()
                             .includeDocumentation(includeDocs)

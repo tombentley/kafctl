@@ -23,6 +23,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.github.freva.asciitable.AsciiTable;
 import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
@@ -33,24 +39,36 @@ import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 
-public class TableFormat implements TopicsOutput, CGroupsOutput {
+public class CsvFormat implements TopicsOutput, CGroupsOutput {
     @Override
     public String describeTopics(Collection<TopicDescription> tds) {
         var topics = tds.stream()
                 .flatMap(t -> t.partitions().stream().map(p -> new Partition(t, p)))
                 .sorted(Comparator.comparing(Partition::topicName))
                 .collect(Collectors.toList());
-        return AsciiTable.getTable(
-                AsciiTable.NO_BORDERS,
-                topics,
-                List.of(
-                        new Column().header("TOPIC").dataAlign(HorizontalAlign.LEFT).with(Partition::topicName),
-                        new Column().header("TOPIC ID").dataAlign(HorizontalAlign.LEFT).with(Partition::topicId),
-                        new Column().header("PARTITION ID").dataAlign(HorizontalAlign.LEFT).with(Partition::partitionId),
-                        new Column().header("LEADER").dataAlign(HorizontalAlign.LEFT).with(Partition::leader),
-                        new Column().header("REPLIACS").dataAlign(HorizontalAlign.LEFT).with(Partition::replicas),
-                        new Column().header("ISR").dataAlign(HorizontalAlign.LEFT).with(Partition::isr)
-                ));
+
+        CsvMapper mapper = new CsvMapper();
+        CsvSchema columns = mapper.schemaFor(Partition.class).withUseHeader(true);
+        ObjectWriter objectWriter = mapper.writer(columns);
+        return topics.stream().map(value -> {
+            try {
+                return objectWriter.writeValueAsString(value);
+            } catch (JsonProcessingException e) {
+                throw new OutputException(e);
+            }
+        }).collect(Collectors.joining("\n"));
+
+//        return AsciiTable.getTable(
+//                AsciiTable.NO_BORDERS,
+//                topics,
+//                List.of(
+//                        new Column().header("TOPIC").dataAlign(HorizontalAlign.LEFT).with(Partition::topicName),
+//                        new Column().header("TOPIC ID").dataAlign(HorizontalAlign.LEFT).with(Partition::topicId),
+//                        new Column().header("PARTITION ID").dataAlign(HorizontalAlign.LEFT).with(Partition::partitionId),
+//                        new Column().header("LEADER").dataAlign(HorizontalAlign.LEFT).with(Partition::leader),
+//                        new Column().header("REPLIACS").dataAlign(HorizontalAlign.LEFT).with(Partition::replicas),
+//                        new Column().header("ISR").dataAlign(HorizontalAlign.LEFT).with(Partition::isr)
+//                ));
     }
 
     @Override
@@ -97,6 +115,7 @@ public class TableFormat implements TopicsOutput, CGroupsOutput {
                 ));
     }
 
+    @JsonPropertyOrder({"topicName", "topicId", "partitionId", "leader", "replicas", "isr"})
     public static class Partition {
 
         private final String topicName;

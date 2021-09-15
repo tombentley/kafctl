@@ -16,30 +16,17 @@
  */
 package com.github.tombentley.kafctl.command;
 
-import picocli.AutoComplete;
 import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Spec;
 
-@Command(
-        name = "completion",
-        description = "Generates a bash or zsh completion script. `source <(kafctl completion)"
+@CommandLine.Command(
+        name = "broker",
+        description = "Describe the brokers configs or logger configs",
+        subcommands = {
+                ExplainBrokerConfig.class,
+                ExplainBrokerLoggers.class
+        }
 )
-public class Completion implements Runnable {
+public class ExplainBroker {
 
-    // TODO figure out the hack needed for topic name complation
 
-    @Spec CommandLine.Model.CommandSpec spec;
-
-    @Override
-    public void run() {
-        String script = AutoComplete.bash(
-                spec.root().name(),
-                spec.root().commandLine());
-        // not PrintWriter.println: scripts with Windows line separators fail in strange ways!
-        spec.commandLine().getOut().print(script);
-        spec.commandLine().getOut().print('\n');
-        spec.commandLine().getOut().flush();
-
-    }
 }

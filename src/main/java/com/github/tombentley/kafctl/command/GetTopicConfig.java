@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.github.tombentley.kafctl.format.DescribeConfigsOutput;
+import com.github.tombentley.kafctl.format.GetConfigsOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.DescribeConfigsOptions;
@@ -34,10 +34,11 @@ import static picocli.CommandLine.Parameters;
 @Command(name = "config", description = "Gets the named topic configs.")
 public class GetTopicConfig implements Runnable {
     @Option(names = {"--output", "-o"},
+            description = "The output format. Valid values: ${COMPLETION-CANDIDATES}",
             defaultValue = "properties",
-            converter = DescribeConfigsOutput.OutputFormatConverter.class,
-            completionCandidates = DescribeConfigsOutput.OutputFormatConverter.class)
-    DescribeConfigsOutput output;
+            converter = GetConfigsOutput.OutputFormatConverter.class,
+            completionCandidates = GetConfigsOutput.OutputFormatConverter.class)
+    GetConfigsOutput output;
 
     @Option(names = "--docs", defaultValue = "false")
     boolean includeDocs;
@@ -61,7 +62,7 @@ public class GetTopicConfig implements Runnable {
                     new DescribeConfigsOptions()
                             .includeDocumentation(includeDocs)
                             .includeSynonyms(includeSynonyms)).all().get();
-            System.out.println(output.describeConfigs(configs));
+            System.out.println(output.getConfigs(configs));
             return null;
         });
 

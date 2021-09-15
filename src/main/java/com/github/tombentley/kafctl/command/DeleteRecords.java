@@ -17,32 +17,40 @@
 package com.github.tombentley.kafctl.command;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-import com.github.tombentley.kafctl.format.ListTopicsOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
-import org.apache.kafka.clients.admin.ListTopicsOptions;
+import org.apache.kafka.clients.admin.DeleteRecordsOptions;
+import org.apache.kafka.clients.admin.RecordsToDelete;
+import org.apache.kafka.common.TopicPartition;
 import picocli.CommandLine;
-import picocli.CommandLine.Option;
 
-@CommandLine.Command(name = "topics", description = "Lists topics.")
-public class GetTopics implements Runnable {
+@CommandLine.Command(
+        name = "records",
+        description = "Deletes records from a topic.")
+public class DeleteRecords implements Runnable {
 
-    @Option(names = {"--output", "-o"},
-            defaultValue = "table",
-            converter = ListTopicsOutput.OutputFormatConverter.class,
-            completionCandidates = ListTopicsOutput.OutputFormatConverter.class)
-    ListTopicsOutput output;
+    @CommandLine.Parameters(index = "0", description = "The name of the topic to delete records from")
+    String topicName;
+
+    @CommandLine.Parameters(index = "1", description = "The partition to delete records from")
+    int partition;
+
+    @CommandLine.Parameters(index = "2", description = "The oldest offset to retain.")
+    int beforeOffset;
+
+    // TODO Kafka itself doesn't support a dry-run
+//    @CommandLine.Option(names = {"--dry-run"})
+//    boolean dryRun;
 
     @Inject
     AdminClient adminClient;
 
     @Override
     public void run() {
-        adminClient.withAdmin(admin -> {
-            var listing = new ArrayList<>(admin.listTopics(new ListTopicsOptions().listInternal(true)).listings().get());
-            // TODO show the internal flag too?
-            System.out.println(output.listTopics(listing));
+        adminClient.withAdmin(ac -> {
+            ac.deleteRecords(Map.of(new TopicPartition(topicName, partition), RecordsToDelete.beforeOffset(beforeOffset)), new DeleteRecordsOptions()).all().get();
             return null;
         });
     }

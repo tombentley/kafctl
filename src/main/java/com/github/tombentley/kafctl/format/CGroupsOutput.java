@@ -17,34 +17,23 @@
 package com.github.tombentley.kafctl.format;
 
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
 
-import org.apache.kafka.clients.admin.TopicListing;
-import picocli.CommandLine;
+import org.apache.kafka.clients.admin.ConsumerGroupDescription;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
 
-public interface ListTopicsOutput {
-    String listTopics(Collection<TopicListing> listing);
+public interface CGroupsOutput {
+    String listCGroups(Collection<ConsumerGroupListing> listing);
 
-    class OutputFormatConverter implements CommandLine.ITypeConverter<ListTopicsOutput>, Iterable<String> {
+    String describeCGroups(Map<String, ConsumerGroupDescription> listing);
+
+    class OutputFormatConverter extends AbstractEnumeratedOption<CGroupsOutput> {
         @Override
-        public ListTopicsOutput convert(String value) {
-            switch (value) {
-                case "json":
-                    return new JsonFormat();
-                case "yaml":
-                    return new YamlFormat();
-                case "table":
-                    return new TableFormat();
-                default:
-                    throw new IllegalArgumentException("Unknown output format: " + value);
-            }
-
-        }
-
-        @Override
-        public Iterator<String> iterator() {
-            return List.of("json", "yaml", "table").iterator();
+        protected Map<String, CGroupsOutput> map() {
+            return Map.of(
+                    "json", new JsonFormat(),
+                    "yaml", new YamlFormat(),
+                    "table", new TableFormat());
         }
     }
 }

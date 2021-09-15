@@ -16,24 +16,33 @@
  */
 package com.github.tombentley.kafctl.format;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
-import org.apache.kafka.common.Node;
-import org.apache.kafka.common.acl.AclOperation;
+import picocli.CommandLine;
 
-public interface DescribeClusterOutput {
-    String describeBrokers(Collection<Node> liveBrokers);
-    String describeCluster(String clusterId, Node controller, Collection<Node> liveBrokers, List<AclOperation> authorizedOperations);
+/**
+ * Helper class, allowing subclasses to be used for both {@code converter} and {@code completionCandidates}
+ * of picocli's {@code @Option}.
+ * @param <T> The type that the ITypeConverter converts to.
+ */
+public abstract class AbstractEnumeratedOption<T> implements CommandLine.ITypeConverter<T>, Iterable<String> {
+    protected abstract Map<String, T> map();
 
-    class OutputFormatConverter extends AbstractEnumeratedOption<DescribeClusterOutput> {
-        @Override
-        protected Map<String, DescribeClusterOutput> map() {
-            return Map.of(
-                    "json", new JsonFormat(),
-                    "yaml", new YamlFormat());
+    @Override
+    public T convert(String value) {
+        T format = map().get(value);
+        if (format == null) {
+            throw new CommandLine.TypeConversionException("supported formats are: " + map().keySet().stream().sorted().collect(Collectors.joining(", ")));
         }
+        return format;
+    }
+
+    @Override
+    public Iterator<String> iterator() {
+        return map().keySet().iterator();
     }
 }
+

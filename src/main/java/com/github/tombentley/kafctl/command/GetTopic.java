@@ -16,14 +16,52 @@
  */
 package com.github.tombentley.kafctl.command;
 
+import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.Comparator;
+
+import com.github.tombentley.kafctl.format.TopicsOutput;
+import com.github.tombentley.kafctl.util.AdminClient;
+import org.apache.kafka.clients.admin.ListTopicsOptions;
+import org.apache.kafka.clients.admin.TopicListing;
 import picocli.CommandLine;
 
-@CommandLine.Command(name = "topic", description = "Gets the named topics' state or config.",
+@CommandLine.Command(
+        name = "topic",
+        aliases = "topics",
+        description = "Gets the named topics' state or config.",
         subcommands = {
                 GetTopicState.class,
                 GetTopicConfig.class
         }
 )
-public class GetTopic {
+public class GetTopic implements Runnable {
+
+        @CommandLine.Option(names = {"--output", "-o"},
+                description = "The output format. Valid values: ${COMPLETION-CANDIDATES}",
+                defaultValue = "table",
+                converter = TopicsOutput.OutputFormatConverter.class,
+                completionCandidates = TopicsOutput.OutputFormatConverter.class)
+        TopicsOutput output;
+
+        @Inject
+        AdminClient adminClient;
+
+        @CommandLine.Option(names = {"--show-internal"}, defaultValue = "false",
+                description = "Whether to show internal topics like __consumer_offsets.")
+        boolean showInternal;
+
+        @Override
+        public void run() {
+                // TODO table out with internal column
+                // TODO sort by internal first, then name?
+
+                adminClient.withAdmin(admin -> {
+                        ArrayList<TopicListing> listing = new ArrayList<>(admin.listTopics(new ListTopicsOptions().listInternal(showInternal)).listings().get());
+                        listing.sort(Comparator.comparing(t -> t.name()));
+                        System.out.println(output.listTopics(listing));
+                        return null;
+                });
+        }
 
 }

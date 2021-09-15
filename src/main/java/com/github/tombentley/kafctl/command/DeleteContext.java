@@ -18,28 +18,19 @@ package com.github.tombentley.kafctl.command;
 
 import javax.inject.Inject;
 
-import com.github.tombentley.kafctl.format.DescribeClusterOutput;
-import com.github.tombentley.kafctl.util.AdminClient;
+import com.github.tombentley.kafctl.util.ContextDb;
 import picocli.CommandLine;
-import picocli.CommandLine.Option;
 
-@CommandLine.Command(name = "brokers", description = "Lists brokers.")
-public class GetBrokers implements Runnable {
-
-    @Option(names = {"--output", "-o"},
-            defaultValue = "json",
-            converter = DescribeClusterOutput.OutputFormatConverter.class,
-            completionCandidates = DescribeClusterOutput.OutputFormatConverter.class)
-    DescribeClusterOutput output;
+@CommandLine.Command(name = "context", description = "Deletes a context.")
+class DeleteContext implements Runnable {
+    @CommandLine.Parameters(index = "0", description = "The name of the context to delete.")
+    String contextName;
 
     @Inject
-    AdminClient adminClient;
+    ContextDb context;
 
     @Override
     public void run() {
-        adminClient.withAdmin(admin -> {
-            System.out.println(output.describeBrokers(admin.describeCluster().nodes().get()));
-            return null;
-        });
+        context.delete(contextName);
     }
 }

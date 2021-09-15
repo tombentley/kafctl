@@ -20,22 +20,34 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
+import org.apache.kafka.clients.admin.ConsumerGroupDescription;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.MemberDescription;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
+import org.apache.kafka.common.ConsumerGroupState;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.acl.AclOperation;
 import org.apache.kafka.common.config.ConfigResource;
 
-public abstract class AbstractJsonFormat implements ListTopicsOutput, DescribeTopicsOutput, DescribeClusterOutput, DescribeConfigsOutput {
+public abstract class AbstractJsonFormat implements
+        TopicsOutput,
+        DescribeClusterOutput,
+        GetConfigsOutput,
+        DescribeConfigsOutput,
+        CGroupsOutput {
 
     protected abstract ObjectMapper mapper();
 
@@ -103,6 +115,7 @@ public abstract class AbstractJsonFormat implements ListTopicsOutput, DescribeTo
         }
     }
 
+    @JsonPropertyOrder({"brokerName", "topicName", "config"})
     static class Cfg {
         private final ConfigResource cr;
         private final Config cfg;
@@ -113,11 +126,13 @@ public abstract class AbstractJsonFormat implements ListTopicsOutput, DescribeTo
         }
 
         @JsonProperty
+        @JsonInclude(Include.NON_NULL)
         public String topicName() {
             return cr.type() == ConfigResource.Type.TOPIC ? cr.name() : null;
         }
 
         @JsonProperty
+        @JsonInclude(Include.NON_NULL)
         public String brokerName() {
             return cr.type() == ConfigResource.Type.BROKER || cr.type() == ConfigResource.Type.BROKER_LOGGER ? cr.name() : null;
         }
@@ -140,6 +155,7 @@ public abstract class AbstractJsonFormat implements ListTopicsOutput, DescribeTo
             }
         }
 
+        @JsonPropertyOrder({"name", "type", "value", "sensitive", "doc", "source", "default", "readOnly"})
         static class E {
             private final ConfigEntry e;
 
@@ -153,6 +169,7 @@ public abstract class AbstractJsonFormat implements ListTopicsOutput, DescribeTo
             }
 
             @JsonProperty
+            @JsonInclude(Include.NON_EMPTY)
             public String doc() {
                 return e.documentation();
             }
@@ -163,8 +180,9 @@ public abstract class AbstractJsonFormat implements ListTopicsOutput, DescribeTo
             }
 
             @JsonProperty
+            @JsonInclude(Include.NON_NULL)
             public String type() {
-                return e.type().name();
+                return e.type() == ConfigEntry.ConfigType.UNKNOWN ? null : e.type().name();
             }
 
             @JsonProperty
@@ -188,6 +206,7 @@ public abstract class AbstractJsonFormat implements ListTopicsOutput, DescribeTo
             }
 
             @JsonProperty
+            @JsonInclude(Include.NON_EMPTY)
             public List<S> synonyms() {
                 return e.synonyms().stream().map(S::new).collect(Collectors.toList());
             }
@@ -218,7 +237,7 @@ public abstract class AbstractJsonFormat implements ListTopicsOutput, DescribeTo
     }
 
     @Override
-    public String describeConfigs(Map<ConfigResource, Config> configs) {
+    public String getConfigs(Map<ConfigResource, Config> configs) {
         try {
             return mapper().writeValueAsString(configs.entrySet().stream().map(e -> new Cfg(e.getKey(), e.getValue())).collect(Collectors.toList()));
         } catch (JsonProcessingException e) {
@@ -282,6 +301,125 @@ public abstract class AbstractJsonFormat implements ListTopicsOutput, DescribeTo
         @JsonProperty
         public int[] isr() {
             return pd.isr().stream().mapToInt(Node::id).toArray();
+        }
+    }
+
+    @JsonPropertyOrder({"groupId", "simple", "state"})
+    public static class Cgl {
+        private final ConsumerGroupListing cg;
+
+        public Cgl(ConsumerGroupListing cg) {
+            this.cg = cg;
+        }
+
+        @JsonProperty
+        public String groupId() {
+            return cg.groupId();
+        }
+
+        @JsonProperty
+        public boolean simple() {
+            return cg.isSimpleConsumerGroup();
+        }
+
+        @JsonProperty
+        public Optional<ConsumerGroupState> state() {
+            return cg.state();
+        }
+    }
+
+    @Override
+    public String listCGroups(Collection<ConsumerGroupListing> listing) {
+        try {
+            return mapper().writeValueAsString(listing.stream().map(Cgl::new).collect(Collectors.toList()));
+        } catch (JsonProcessingException e) {
+            throw new OutputException(e);
+        }
+    }
+
+    @JsonPropertyOrder({"groupId", "simple", "coordinator", "members", "partitionAssignor"})
+    public static class Cgd {
+        private final ConsumerGroupDescription cg;
+
+        public Cgd(ConsumerGroupDescription cg) {
+            this.cg = cg;
+        }
+
+        @JsonProperty
+        public String groupId() {
+            return cg.groupId();
+        }
+
+        @JsonProperty
+        public boolean simple() {
+            return cg.isSimpleConsumerGroup();
+        }
+
+        @JsonProperty
+        public int coordinator() {
+            return cg.coordinator().id();
+        }
+
+        @JsonProperty
+        public String partitionAssignor() {
+            return cg.partitionAssignor();
+        }
+
+        @JsonProperty
+        public List<Mem> members() {
+            return cg.members().stream().map(Mem::new).collect(Collectors.toList());
+        }
+    }
+
+    @JsonPropertyOrder({"consumerId", "clientId", "host", "groupInstanceId", "assignments"})
+    static class Mem {
+        private final MemberDescription mem;
+
+        public Mem(MemberDescription mem) {
+            this.mem = mem;
+        }
+
+        @JsonProperty
+        public String clientId() {
+            return mem.clientId();
+        }
+
+        @JsonProperty
+        public String host() {
+            return mem.host();
+        }
+
+        @JsonProperty
+        public String consumerId() {
+            return mem.consumerId();
+        }
+
+        @JsonProperty
+        public Optional<String> groupInstanceId() {
+            return mem.groupInstanceId();
+        }
+
+        @JsonProperty
+        public List<String> assignments() {
+            return mem.assignment().topicPartitions().stream().map(ma -> ma.topic() + "/" + ma.partition()).collect(Collectors.toList());
+        }
+    }
+
+    @Override
+    public String describeCGroups(Map<String, ConsumerGroupDescription> descriptions) {
+        try {
+            return mapper().writeValueAsString(descriptions.values().stream().map(Cgd::new).collect(Collectors.toList()));
+        } catch (JsonProcessingException e) {
+            throw new OutputException(e);
+        }
+    }
+
+    @Override
+    public String describeConfigs(Collection<ConfigEntry> configs) {
+        try {
+            return mapper().writeValueAsString(configs.stream().map(Cfg.E::new).collect(Collectors.toList()));
+        } catch (JsonProcessingException e) {
+            throw new OutputException(e);
         }
     }
 }
