@@ -15,11 +15,13 @@
  */
 package com.github.tombentley.kafctl.command;
 
+import com.github.tombentley.kafctl.Constants;
 import io.quarkus.picocli.runtime.annotations.TopCommand;
 import picocli.CommandLine;
 
 @TopCommand
-@CommandLine.Command(name = "kafctl",
+@CommandLine.Command(name = Constants.CMD_NAME,
+        description = "A command-line interface for Kafka administration",
         subcommands = {
                 Explain.class,
                 Get.class,
@@ -29,8 +31,7 @@ import picocli.CommandLine;
                 Delete.class,
                 CommandLine.HelpCommand.class,
                 Completion.class
-        },
-        description = "A command-line interface for Kafka administration"
+        }
 )
 public class KcCtlCommand {
 }

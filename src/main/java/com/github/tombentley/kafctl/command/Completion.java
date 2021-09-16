@@ -16,6 +16,7 @@
  */
 package com.github.tombentley.kafctl.command;
 
+import com.github.tombentley.kafctl.Constants;
 import picocli.AutoComplete;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -23,7 +24,7 @@ import picocli.CommandLine.Spec;
 
 @Command(
         name = "completion",
-        description = "Generates a bash or zsh completion script. `source <(kafctl completion)"
+        description = "Generates a bash or zsh completion script. `source <(" + Constants.CMD_NAME + " completion)"
 )
 public class Completion implements Runnable {
 

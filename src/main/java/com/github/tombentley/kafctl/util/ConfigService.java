@@ -26,11 +26,13 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.github.tombentley.kafctl.Constants;
 import com.github.tombentley.kafctl.format.DescribeConfigsOutput;
 import org.apache.kafka.clients.admin.AlterConfigOp;
 import org.apache.kafka.clients.admin.AlterConfigsOptions;
@@ -109,7 +111,7 @@ public class ConfigService {
     }
 
     private void execEditor(Path file) throws InterruptedException, IOException {
-        String editor = System.getenv("KAFCTL_EDITOR");
+        String editor = System.getenv(Constants.CMD_NAME.toUpperCase(Locale.ENGLISH) + "_EDITOR");
         if (editor == null) {
             editor = System.getenv("EDITOR");
         }

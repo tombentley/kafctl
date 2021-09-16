@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import com.github.tombentley.kafctl.Constants;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 
 /**
@@ -33,6 +34,8 @@ import org.apache.kafka.clients.admin.AdminClientConfig;
  */
 @ApplicationScoped
 public class ContextDb {
+
+    public static final String DOT_DIR_NAME = "." + Constants.CMD_NAME;
 
     public static class Context {
         private final String name;
@@ -58,7 +61,7 @@ public class ContextDb {
 
     /** Lists the known contexts */
     public List<Context> list() {
-        Path propsPath = Path.of(System.getProperty("user.home"), ".kafctl");
+        Path propsPath = Path.of(System.getProperty("user.home"), DOT_DIR_NAME);
         try {
             return Files.list(propsPath)
                     .map(p -> p.toFile())
@@ -142,11 +145,11 @@ public class ContextDb {
     }
 
     private Path contextPath() {
-        return Path.of(System.getProperty("user.home"), ".kafctl", "context");
+        return Path.of(System.getProperty("user.home"), DOT_DIR_NAME, "context");
     }
 
     private Path propsPath(String contextName) {
-        return Path.of(System.getProperty("user.home"), ".kafctl", "context-" + contextName + ".properties");
+        return Path.of(System.getProperty("user.home"), DOT_DIR_NAME, "context-" + contextName + ".properties");
     }
 
     /** Gethe current context. */
