@@ -27,6 +27,7 @@ import org.apache.kafka.common.KafkaException;
 @ApplicationScoped
 public class AdminClient {
 
+    @FunctionalInterface
     public interface AdminConsumer<T> {
         T apply(Admin admin) throws Exception;
     }

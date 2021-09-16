@@ -23,6 +23,7 @@ import java.util.Set;
 
 import com.github.tombentley.kafctl.format.DescribeConfigsOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
+import com.github.tombentley.kafctl.util.ConfigService;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.DescribeConfigsOptions;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
@@ -44,21 +45,15 @@ public class ExplainTopicConfig implements Runnable {
     @Inject
     AdminClient adminClient;
 
+    @Inject
+    ConfigService configService;
+
     @Override
     public void run() {
         adminClient.withAdmin(admin -> {
-            // TODO This is a horrible hack around the fact that Kafka only exposes config descriptions by describing existing entities
-            // I.e. you need a topic to be able to query a broker for topic configs.
             Set<String> topicNames = admin.listTopics(new ListTopicsOptions().listInternal(true)).names().get();
             ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topicNames.iterator().next());
-            Config config = admin.describeConfigs(
-                    List.of(configResource),
-                    new DescribeConfigsOptions()
-                            .includeDocumentation(true)
-                            .includeSynonyms(true)).values().get(configResource).get();
-            System.out.println(output.describeConfigs(config.entries()));
-
-
+            configService.explain(configResource, output);
             return null;
         });
 

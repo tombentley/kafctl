@@ -17,12 +17,10 @@
 package com.github.tombentley.kafctl.command;
 
 import javax.inject.Inject;
-import java.util.List;
 
 import com.github.tombentley.kafctl.format.DescribeConfigsOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
-import org.apache.kafka.clients.admin.Config;
-import org.apache.kafka.clients.admin.DescribeConfigsOptions;
+import com.github.tombentley.kafctl.util.ConfigService;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.config.ConfigResource;
 import picocli.CommandLine.Command;
@@ -40,18 +38,15 @@ public class ExplainBrokerConfig implements Runnable {
     @Inject
     AdminClient adminClient;
 
+    @Inject
+    ConfigService configService;
+
     @Override
     public void run() {
         adminClient.withAdmin(admin -> {
-            // TODO this is very similar code to the topic configs: encapsulate!
             Node node = admin.describeCluster().controller().get();
             ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, node.idString());
-            Config config = admin.describeConfigs(
-                    List.of(configResource),
-                    new DescribeConfigsOptions()
-                            .includeDocumentation(true)
-                            .includeSynonyms(true)).values().get(configResource).get();
-            System.out.println(output.describeConfigs(config.entries()));
+            configService.explain(configResource, output);
             return null;
         });
 

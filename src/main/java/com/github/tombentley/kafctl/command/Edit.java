@@ -20,10 +20,12 @@ import picocli.CommandLine;
 
 @CommandLine.Command(
         name = "edit",
-        description = "Edit broker and topic configs, and broker loggers",
+        description = "Modify things like broker and topic configs, and broker loggers interactively using a text editor.\n" +
+                "The text editor to use is taken from the $KAFCTL_EDITOR or, if that's not set, the $EDITOR environment variable.",
         subcommands = {
                 EditTopic.class,
                 EditBroker.class,
+                // TODO edit support for the admin client properties in the context
         }
 )
 public class Edit {

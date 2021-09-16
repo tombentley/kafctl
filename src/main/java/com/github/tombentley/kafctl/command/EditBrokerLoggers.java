@@ -16,18 +16,28 @@
  */
 package com.github.tombentley.kafctl.command;
 
+import javax.inject.Inject;
+
+import com.github.tombentley.kafctl.util.ConfigService;
+import org.apache.kafka.common.config.ConfigResource;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-        name = "broker",
-        description = "Edit broker configs or loggers.",
-        subcommands = {
-                EditTopicConfig.class,
-                EditBrokerConfig.class,
-                EditBrokerLoggers.class
-        }
-)
-public class EditBroker {
+        name = "config",
+        description = "Edit a brokers' loggers.")
+public class EditBrokerLoggers implements Runnable {
 
+    @CommandLine.Parameters(index = "0", arity = "1", description = "Broker to be altered")
+    int brokerId;
 
+    @CommandLine.Option(names = {"--dry-run"}, description="Validate the change without actually performing it")
+    boolean dryRun;
+
+    @Inject
+    ConfigService editor;
+
+    @Override
+    public void run() {
+        editor.edit(new ConfigResource(ConfigResource.Type.BROKER_LOGGER, Integer.toString(brokerId)), false, dryRun);
+    }
 }
