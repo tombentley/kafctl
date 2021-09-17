@@ -29,10 +29,10 @@ public class PlainTextFormat implements DescribeConfigsOutput {
     public String describeConfigs(Collection<ConfigEntry> configs) {
         return configs.stream().sorted(Comparator.comparing(ConfigEntry::name))
                 .map(entry -> {
-                    return Ansi.AUTO.string("@|green " + entry.name() + "|@")
-                        + " (" + Ansi.AUTO.string("@|blue " + (entry.isReadOnly() ? "read-only " : "read-write ") + entry.type() + "|@") + "): "
-                        + Ansi.AUTO.string(entry.documentation().replaceAll("\\<code\\>(.*?)</code>", "@|bold $1|@"));
+                    return Ansi.AUTO.string("@|green " + entry.name() + "|@\n")
+                        + "  " + Ansi.AUTO.string("@|yellow " + (entry.isReadOnly() ? "read-only " : "read-write ") + entry.type() + "|@") + System.lineSeparator()
+                        + "    " + Ansi.AUTO.string(entry.documentation().replaceAll("\\<code\\>(.*?)</code>", "@|bold $1|@"));
                 })
-                .collect(Collectors.joining(System.lineSeparator()));
+                .collect(Collectors.joining(System.lineSeparator() + System.lineSeparator()));
     }
 }

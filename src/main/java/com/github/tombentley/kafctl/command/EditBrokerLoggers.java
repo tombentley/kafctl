@@ -23,7 +23,7 @@ import org.apache.kafka.common.config.ConfigResource;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-        name = "config",
+        name = "loggers",
         description = "Edit a brokers' loggers.")
 public class EditBrokerLoggers implements Runnable {
 

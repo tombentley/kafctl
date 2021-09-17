@@ -273,8 +273,18 @@ Note the enabled and available features should be part of the `get cluster featu
 
 ### Log dirs
 
+### `kafctl config`
+
+Global configs for things that aren't part of a context.
+For example override defaults for some options (`--dry-run` by default, or forcing colors on/off)
+
 ### `kafctl edit`
 
-This should open an editor on a temp .properties file generated from the existing config for a topic/broker etc.
-The file should be sorted and optionally, but by default, annotated with comments, being the documentation for each config.
-When the editor process exits we compare the content in with with the original configs and compute the diff and use this in the call to incremental alter configs.
+* Editing a context (.e. the admin properties file)
+* Editing the global configs file (as used by `kafctl config`)
+
+### Top level `--verbose`
+
+### `kafctl version`
+
+Print a version number

@@ -17,19 +17,16 @@
 package com.github.tombentley.kafctl.command;
 
 import javax.inject.Inject;
-import java.util.List;
 
 import com.github.tombentley.kafctl.format.DescribeConfigsOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
 import com.github.tombentley.kafctl.util.ConfigService;
-import org.apache.kafka.clients.admin.Config;
-import org.apache.kafka.clients.admin.DescribeConfigsOptions;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.config.ConfigResource;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@Command(name = "logger", description = "Describes broker logger configs.")
+@Command(name = "loggers", description = "Describes broker logger configs.")
 public class ExplainBrokerLoggers implements Runnable {
     @Option(names = {"--output", "-o"},
             description = "The output format. Valid values: ${COMPLETION-CANDIDATES}",

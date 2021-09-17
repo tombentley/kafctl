@@ -17,15 +17,11 @@
 package com.github.tombentley.kafctl.command;
 
 import javax.inject.Inject;
-import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import com.github.tombentley.kafctl.format.DescribeConfigsOutput;
 import com.github.tombentley.kafctl.util.AdminClient;
 import com.github.tombentley.kafctl.util.ConfigService;
-import org.apache.kafka.clients.admin.Config;
-import org.apache.kafka.clients.admin.DescribeConfigsOptions;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.common.config.ConfigResource;
 import picocli.CommandLine.Command;

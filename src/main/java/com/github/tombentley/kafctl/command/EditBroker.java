@@ -22,7 +22,6 @@ import picocli.CommandLine;
         name = "broker",
         description = "Edit broker configs or loggers.",
         subcommands = {
-                EditTopicConfig.class,
                 EditBrokerConfig.class,
                 EditBrokerLoggers.class
         }
