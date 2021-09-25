@@ -18,6 +18,28 @@ It intentionally _does not_ address use cases for:
 * Bash completion
 * Colour output
 
+## Build
+
+To build an executable JAR run:
+
+```bash
+./mvnw package
+```
+
+This will produce an executable Quarkus application JAR that can be run with:
+
+```bash
+java -jar target/quarkus-app/quarkus-run.jar
+```
+
+A native executable can be built with:
+
+```bash
+./mvnw package -Pnative
+```
+
+This will use GraalVM to compile a native binary. If you don't have GraalVM installed locally the build will attempt to pull a containerised version (using `docker` or `podman`).
+
 ## Example commands
 
 ## Contexts
